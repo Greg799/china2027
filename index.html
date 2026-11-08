@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Китай, октябрь 2027 — маршрут по дням</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: horizontal kanban — one column per day, cards = time slots; city colour codes columns */
+:root {
+  --bg: #eef1f3;
+  --surface: #ffffff;
+  --ink: #1b2228;
+  --muted: #5d6973;
+  --line: #d6dde2;
+  --accent: #b3261e;
+  --beijing: #b3261e;
+  --xian: #a8660d;
+  --zjj: #23795a;
+  --shanghai: #2457a6;
+  --transport-bg: #f3f0e6;
+  --book-bg: #fde8e4;
+  --book-ink: #9a1f17;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171b; --surface: #1b2228; --ink: #e8edf0; --muted: #9aa6af; --line: #2c363d;
+    --accent: #ef6a5f; --beijing: #ef6a5f; --xian: #e0a24a; --zjj: #4fbf91; --shanghai: #6f9df0;
+    --transport-bg: #2a2a22; --book-bg: #3d1f1c; --book-ink: #ffb3aa;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171b; --surface: #1b2228; --ink: #e8edf0; --muted: #9aa6af; --line: #2c363d;
+  --accent: #ef6a5f; --beijing: #ef6a5f; --xian: #e0a24a; --zjj: #4fbf91; --shanghai: #6f9df0;
+  --transport-bg: #2a2a22; --book-bg: #3d1f1c; --book-ink: #ffb3aa;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+header { padding: 24px 20px 12px; display: grid; gap: 12px; }
+h1 { font-family: var(--font-display); font-size: 28px; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 70ch; }
+.route { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.route .stop { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-weight: 600; }
+.route .dot { width: 10px; height: 10px; border-radius: 50%; }
+.route .arrow { color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.controls button { font: inherit; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.controls button:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 13px; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line); }
+.board { display: flex; gap: 12px; overflow-x: auto; padding: 8px 20px 28px; scroll-snap-type: x proximity; }
+.col { flex: 0 0 290px; scroll-snap-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; border-top: 5px solid var(--city); }
+.col-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+.col-head .date { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.col-head .day { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.col-head .num { color: var(--muted); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.col-head .city { color: var(--city); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 12px; }
+.col-head .theme { font-weight: 600; }
+.cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.card { border: 1px solid var(--line); border-left: 4px solid var(--city); border-radius: 8px; padding: 8px 10px; background: var(--surface); display: grid; gap: 3px; }
+.card.transport { background: var(--transport-bg); border-left-style: dashed; }
+.card.alt { border-style: dashed; opacity: .9; }
+.card .time { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 12.5px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
+.card .title { font-weight: 700; }
+.card .note { color: var(--muted); font-size: 13px; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--bg); color: var(--muted); }
+.tag.book { background: var(--book-bg); color: var(--book-ink); }
+.col-foot { margin-top: auto; padding: 10px 14px 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+.hidden { display: none !important; }
+footer { padding: 0 20px 28px; color: var(--muted); font-size: 12.5px; max-width: 90ch; }
+@media (max-width: 420px) { .col { flex-basis: 85vw; } h1 { font-size: 23px; } }
+@media (prefers-reduced-motion: no-preference) { .board { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Китай вдвоём: 17–29 октября 2027</h1>
+  <p class="sub">Маршрут по дням: каждый столбик — один день, внутри время и места. Время ориентировочное, рейсы и поезда нужно уточнить при бронировании. Красная метка «бронь» — купить заранее.</p>
+  <div class="route" aria-label="Маршрут">
+    <span class="stop"><span class="dot" style="background:var(--beijing)"></span>Пекин · 17–20</span><span class="arrow">→</span>
+    <span class="stop"><span class="dot" style="background:var(--xian)"></span>Сиань · 20–22</span><span class="arrow">→</span>
+    <span class="stop"><span class="dot" style="background:var(--zjj)"></span>Чжанцзяцзе · 23–25</span><span class="arrow">→</span>
+    <span class="stop"><span class="dot" style="background:var(--shanghai)"></span>Шанхай · 26–29</span>
+  </div>
+  <div class="controls" role="group" aria-label="Фильтры">
+    <button id="f-all" type="button" data-city="all" aria-pressed="true">Все дни</button>
+    <button id="f-bj" type="button" data-city="beijing" aria-pressed="false">Пекин</button>
+    <button id="f-xa" type="button" data-city="xian" aria-pressed="false">Сиань</button>
+    <button id="f-zjj" type="button" data-city="zjj" aria-pressed="false">Чжанцзяцзе</button>
+    <button id="f-sh" type="button" data-city="shanghai" aria-pressed="false">Шанхай</button>
+    <button id="f-book" type="button" data-book="1" aria-pressed="false">Только то, что бронировать</button>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--surface)"></span>Достопримечательность</span>
+    <span><span class="sw" style="background:var(--transport-bg)"></span>Переезд</span>
+    <span><span class="sw" style="border-style:dashed"></span>Запасной вариант</span>
+  </div>
+</header>
+
+<main class="board" id="board" aria-label="Дни поездки"></main>
+
+<footer>
+  Закат в конце октября: Пекин около 17:25, Сиань и Чжанцзяцзе около 18:15, Шанхай около 17:15. Запретный город и Исторический музей Шэньси закрыты по понедельникам — в плане это учтено.
+</footer>
+
+<script>
+const CITY = { beijing: "Пекин", xian: "Сиань", zjj: "Чжанцзяцзе", shanghai: "Шанхай" };
+// type: s = sight, t = transport, f = food/rest, a = alternative
+const DAYS = [
+  { d: "Вс", n: "17 окт", day: 1, city: "beijing", theme: "Прилёт, хутуны и утка", cards: [
+    ["06:00–08:00", "Прилёт, трансфер в отель", "Такси или Didi из аэропорта, около часа", "t", 1, "Отель с ночи 16-го для раннего заезда"],
+    ["08:30–12:00", "Отдых после перелёта", "", "f"],
+    ["13:30–15:30", "Храм Юнхэгун и переулок Удаоин", "Ламаистский храм, затем кофейни Удаоина", "s"],
+    ["16:00–17:00", "Барабанная и Колокольная башни", "", "s"],
+    ["17:00–19:00", "Хутуны Шичахая", "Яньдай Сецзе, мост Иньдин, набережная Хоухая на закате", "s"],
+    ["19:30", "Ужин: утка по-пекински", "", "f", 1, "Стол в ресторане"]
+  ], foot: "Мягкий старт: без стены и Запретного города — выходной, много людей." },
+  { d: "Пн", n: "18 окт", day: 2, city: "beijing", theme: "Великая стена", cards: [
+    ["07:30–09:30", "Выезд на Мутяньюй", "Машина с водителем на весь день, 1,5–2 ч", "t", 1, "Машина с водителем"],
+    ["09:30–13:30", "Великая стена, Мутяньюй", "Вверх на канатке, по стене 2–3 ч, вниз на тобоггане", "s", 1, "Вход + канатка"],
+    ["13:30–14:30", "Обед в деревне у стены", "", "f"],
+    ["14:30–16:30", "Возвращение в город", "", "t"],
+    ["19:00–21:00", "Олимпийский парк", "«Птичье гнездо» и «Водяной куб» в подсветке", "s"]
+  ], foot: "Запретный город по понедельникам закрыт — поэтому стена сегодня." },
+  { d: "Вт", n: "19 окт", day: 3, city: "beijing", theme: "Императорский центр", cards: [
+    ["08:00–08:45", "Площадь Тяньаньмэнь", "Вход по паспорту", "s", 1, "Бесплатная регистрация"],
+    ["08:45–12:30", "Запретный город", "Вход через Умэнь (юг), выход на север. 3–4 ч", "s", 1, "За 7 дней, 20:00 по Пекину"],
+    ["12:30–13:30", "Обед", "", "f"],
+    ["13:30–14:30", "Парк Цзиншань", "Вид на Запретный город сверху", "s"],
+    ["14:45–16:30", "Парк Бэйхай", "Озеро и Белая пагода", "s"],
+    ["18:00–21:00", "Цяньмэнь и Дашилань", "Прогулка и ужин", "s"]
+  ], foot: "Самый насыщенный день — удобная обувь обязательна." },
+  { d: "Ср", n: "20 окт", day: 4, city: "beijing", theme: "Храм Неба → поезд в Сиань", cards: [
+    ["07:00–09:30", "Храм Неба", "Утром местные с тайцзи и танцами. Брать комбо-билет с залами", "s", 1, "Комбо-билет"],
+    ["10:00–11:30", "Выписка и обед", "", "f"],
+    ["12:15", "Вокзал Пекин-Западный", "Приехать за 45–60 мин, проверка паспорта", "t"],
+    ["13:00–17:30", "Поезд G: Пекин → Сиань-Северный", "4,5–5 ч, второй класс", "t", 1, "Билеты на поезд"],
+    ["18:00–19:00", "Трансфер в отель внутри стены", "Метро или такси, около 40 мин", "t"],
+    ["19:30–21:00", "Башни в подсветке, ужин", "Мусульманский квартал рядом с отелем", "s"]
+  ], foot: "Время поезда условное — выбрать рейс около 13:00." },
+  { d: "Чт", n: "21 окт", day: 5, city: "xian", theme: "Терракотовая армия", cards: [
+    ["08:00–09:00", "Такси к Терракотовой армии", "Около часа от центра", "t"],
+    ["09:00–13:00", "Терракотовая армия", "Ямы №1, 2, 3 и зал бронзовых колесниц. Лучше с гидом", "s", 1, "Билет по паспорту + гид"],
+    ["13:00–14:30", "Возвращение и обед", "", "f"],
+    ["15:00–17:00", "Большая пагода диких гусей", "", "s"],
+    ["18:30–21:00", "Датан Будэе", "Танский бульвар в иллюминации, начинается у пагоды", "s"]
+  ], foot: "Закат около 18:15 — бульвар лучше смотреть после него." },
+  { d: "Пт", n: "22 окт", day: 6, city: "xian", theme: "Музей, стена, Мусульманский квартал", cards: [
+    ["09:00–12:00", "Исторический музей Шэньси", "Золото, фрески, бронза. 2,5–3 ч", "s", 1, "Бронь за ~неделю"],
+    ["12:00–13:15", "Обед", "", "f"],
+    ["13:30–14:30", "Большая мечеть", "Днём, вечером закрыта. Закрытая одежда", "s"],
+    ["14:45–15:45", "Лес стел (Бэйлинь)", "Можно пропустить, если каллиграфия неинтересна", "s"],
+    ["16:00–18:00", "Стена на велосипедах", "От Южных ворот, круг ~14 км, к закату", "s"],
+    ["18:30–21:00", "Мусульманский квартал: ужин", "Жоуцзямо, лапша бянбян, пароджан-мо", "f"]
+  ], foot: "Вечером собрать вещи — утром ранний вылет." },
+  { d: "Сб", n: "23 окт", day: 7, city: "zjj", theme: "Перелёт и гора Тяньмэнь", cards: [
+    ["07:00", "Выезд в аэропорт Сяньян", "Около часа", "t"],
+    ["09:00–11:00", "Рейс Сиань → Чжанцзяцзе", "Около 2 ч, время рейса уточнить", "t", 1, "Авиабилеты"],
+    ["11:30–12:30", "Вещи в отель или камеру хранения, обед", "", "f"],
+    ["12:30–17:30", "Гора Тяньмэнь", "Канатка вверх, стеклянная тропа, 99 поворотов, Небесные врата", "s", 1, "Билет на дату; проверить канатку"],
+    ["18:00–19:00", "Трансфер в посёлок Улинъюань", "40–60 мин, ночёвки здесь 3 ночи", "t"]
+  ], foot: "Если рейс прилетает позже полудня — уточнить, до скольки работает канатка." },
+  { d: "Вс", n: "24 окт", day: 8, city: "zjj", theme: "Парк Улинъюань: «Аватар»", cards: [
+    ["07:00", "Вход в парк к открытию", "В выходной ранний старт важен", "s", 1, "Билет на 4 дня, по паспорту"],
+    ["07:30–09:30", "Ручей Золотой Кнут", "Ровная тропа внизу между скалами", "s"],
+    ["10:00", "Лифт Байлун", "Подъём на верхний ярус", "t", 1, "Оплачивается отдельно"],
+    ["10:30–13:30", "Юаньцзяцзе", "«Гора Аллилуйя», «Первый мост под небом»", "s"],
+    ["13:30–14:30", "Обед в парке", "", "f"],
+    ["14:30–17:00", "Тяньцзышань", "«Императорская кисть», панорамы", "s"],
+    ["17:00", "Спуск на канатке Тяньцзышань", "", "t", 1, "Оплачивается отдельно"]
+  ], foot: "Если плотный туман — поменять местами с понедельником." },
+  { d: "Пн", n: "25 окт", day: 9, city: "zjj", theme: "Будний день в парке", cards: [
+    ["07:30", "Второй вход в парк", "Билет ещё действует", "s"],
+    ["08:00–12:00", "Ян Цзяцзе или любимые площадки", "В будни людей меньше", "s"],
+    ["08:00–13:00", "Вместо этого: стеклянный мост над Большим каньоном", "Около 40 мин от Улинъюаня, полдня", "a", 1, "Отдельный билет"],
+    ["13:00–14:00", "Обед", "", "f"],
+    ["14:00–17:00", "Резерв на погоду", "Добрать то, что закрыл туман в воскресенье", "a"],
+    ["вечер", "Отдых, сборы", "", "f"]
+  ], foot: "Запасной день: держать свободным до утра." },
+  { d: "Вт", n: "26 окт", day: 10, city: "shanghai", theme: "Перелёт и Вайтань", cards: [
+    ["08:00", "Выезд в аэропорт Хэхуа", "Около 50 мин из Улинъюаня", "t"],
+    ["10:00–12:00", "Рейс Чжанцзяцзе → Шанхай", "Около 2 ч, время рейса уточнить", "t", 1, "Авиабилеты"],
+    ["13:00–14:30", "Трансфер и заселение", "У площади Жэньминь или Вайтаня", "t"],
+    ["15:30–17:00", "Нанкинская улица", "Пешком до набережной", "s"],
+    ["17:00–19:30", "Вайтань", "Закат около 17:15, затем подсветка Пудуна", "s"],
+    ["20:00", "Ужин", "", "f"]
+  ], foot: "" },
+  { d: "Ср", n: "27 окт", day: 11, city: "shanghai", theme: "Старый город и Пудун", cards: [
+    ["08:30–11:00", "Сад Юйюань и Храм бога города", "К открытию, днём толпы", "s", 1, "Билет в сад"],
+    ["11:30–12:30", "Обед: сяолунбао", "", "f"],
+    ["13:30–15:30", "Пудун: набережная и небоскрёбы", "", "s"],
+    ["16:00–18:00", "Шанхайская башня, 118-й этаж", "К закату", "s", 1, "Билет на площадку"],
+    ["19:00–20:00", "Теплоход по Хуанпу", "Или паром через реку — дёшево и тот же вид", "s"],
+    ["20:30", "Ужин", "", "f"]
+  ], foot: "" },
+  { d: "Чт", n: "28 окт", day: 12, city: "shanghai", theme: "Сучжоу на день", cards: [
+    ["08:00–08:40", "Поезд Шанхай → Сучжоу", "Около 30 мин", "t", 1, "Билеты на поезд"],
+    ["09:00–11:30", "Сад Скромного управляющего", "Главный классический сад", "s", 1, "Билет на дату"],
+    ["11:30–13:00", "Музей Сучжоу", "Здание И. М. Пэя, вход бесплатный", "s", 1, "Бесплатная бронь"],
+    ["13:00–14:00", "Обед", "", "f"],
+    ["14:00–17:00", "Улица Пинцзян", "Каналы, мостики, чайные", "s"],
+    ["18:00", "Поезд обратно в Шанхай", "", "t"],
+    ["весь день", "Вместо этого: Чжуцзяцзяо", "Водный городок, 17-я линия метро, полдня — и вторая половина дня свободна", "a"]
+  ], foot: "Чжуцзяцзяо — только сегодня: в пятницу он далеко от аэропорта." },
+  { d: "Пт", n: "29 окт", day: 13, city: "shanghai", theme: "Французская концессия и вылет", cards: [
+    ["09:00", "Выписка, вещи в камеру хранения отеля", "", "f"],
+    ["09:30–13:00", "Французская концессия", "Улицы Укан и Аньфу, особняки, кофейни", "s"],
+    ["13:00–14:00", "Обед", "", "f"],
+    ["14:00–15:30", "Тяньцзыфан и Синьтяньди", "Последние покупки", "s"],
+    ["16:00", "Выезд в аэропорт Пудун", "Около часа; быстрее — поезд на магнитной подушке", "t"],
+    ["вечер", "Вылет домой", "В аэропорту за 3 ч до вылета", "t", 1, "Обратный рейс"]
+  ], foot: "Выезд в аэропорт — за 4 ч до вылета." }
+];
+
+const board = document.getElementById("board");
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+DAYS.forEach(day => {
+  const col = el("section", "col");
+  col.dataset.city = day.city;
+  col.style.setProperty("--city", `var(--${day.city})`);
+  col.setAttribute("aria-label", `${day.d}, ${day.n}`);
+  const head = el("div", "col-head");
+  const date = el("div", "date");
+  date.append(el("span", "day", `${day.d}, ${day.n}`), el("span", "num", `день ${day.day} из 13`));
+  head.append(date, el("span", "city", CITY[day.city]), el("span", "theme", day.theme));
+  col.append(head);
+  const cards = el("div", "cards");
+  day.cards.forEach(([time, title, note, type, book, bookNote]) => {
+    const c = el("article", "card" + (type === "t" ? " transport" : "") + (type === "a" ? " alt" : ""));
+    c.tabIndex = 0;
+    if (book) c.dataset.book = "1";
+    const t = el("div", "time");
+    t.append(el("span", null, time), el("span", null, type === "t" ? "переезд" : type === "a" ? "запасной" : type === "f" ? "" : ""));
+    c.append(t, el("div", "title", title));
+    if (note) c.append(el("div", "note", note));
+    if (book) { const tags = el("div", "tags"); tags.append(el("span", "tag book", "бронь: " + bookNote)); c.append(tags); }
+    cards.append(c);
+  });
+  col.append(cards);
+  if (day.foot) col.append(el("div", "col-foot", day.foot));
+  board.append(col);
+});
+
+let cityFilter = "all", bookOnly = false;
+function apply() {
+  document.querySelectorAll(".col").forEach(col => {
+    col.classList.toggle("hidden", cityFilter !== "all" && col.dataset.city !== cityFilter);
+    let any = false;
+    col.querySelectorAll(".card").forEach(c => {
+      const hide = bookOnly && c.dataset.book !== "1";
+      c.classList.toggle("hidden", hide);
+      if (!hide) any = true;
+    });
+    if (bookOnly && !any) col.classList.add("hidden");
+  });
+}
+document.querySelectorAll(".controls button[data-city]").forEach(b => b.addEventListener("click", () => {
+  cityFilter = b.dataset.city;
+  document.querySelectorAll(".controls button[data-city]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  apply();
+}));
+const bookBtn = document.getElementById("f-book");
+bookBtn.addEventListener("click", () => { bookOnly = !bookOnly; bookBtn.setAttribute("aria-pressed", String(bookOnly)); apply(); });
+</script>
+</body>
+</html>
